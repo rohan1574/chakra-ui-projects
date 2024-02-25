@@ -18,8 +18,8 @@ import SortIcon from "../icons/SortIcon";
 import Tasktable from "./Tasktable";
 import { editCard, getData, removeCard } from "../../public/localStorage";
 import { Outlet } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
-
+import { Circle, Pencil, Search, Trash2 } from "lucide-react";
+import styles from './styles.module.scss';
 const TanstaskTable = () => {
 
   const [filtering, setfiltering] = useState('');
@@ -30,40 +30,52 @@ const TanstaskTable = () => {
   const initialRef = React.useRef(null)
   const finalRef = React.useRef(null)
   useEffect(() => {
-    setData(getData())
-  }, [])
+    const fetchData = async () => {
+      const dataFromStorage = getData();
+      setData(dataFromStorage);
+    };
+
+    fetchData(); // Fetch data initially when the component mounts
+
+    // Setup polling interval
+    const intervalId = setInterval(fetchData, 500); // Poll every 5 seconds (adjust as needed)
+
+    // Cleanup function to clear interval when component unmounts
+    return () => clearInterval(intervalId);
+  }, []);
   console.log(data)
 
   const columns = [
     {
       accessorKey: "userName",
       header: "User Name",
-      cell: (props) => <p>{props.getValue()}</p>
+      cell: (props) => <p className="text-[16px]">{props.getValue()}</p>
     },
     {
       accessorKey: "firstName",
       header: "First Name",
-      cell: (props) => <p> {props.getValue()}</p>
+      cell: (props) => <p className="text-[16px]"> {props.getValue()}</p>
     },
     {
       accessorKey: "lastName",
       header: "Last Name",
-      cell: (props) => <p>{props.getValue()}</p>
+      cell: (props) => <p className="text-[16px]">{props.getValue()}</p>
     },
     {
       accessorKey: "roletName",
       header: "Role Name",
-      cell: (props) => <p>{props.getValue()}</p>
+      cell: (props) => <p className="text-[16px]">{props.getValue()}</p>
     },
-   
+
     {
       accessorKey: "statusName",
       header: "Status",
       cell: (props) => {
         const status = props.getValue();
-        const textStyle = status === "complete" ? { color: "red" } : { color: "green" };
-    
-        return <p style={textStyle}>{status}</p>;
+        
+        const textStyle = status === "Active" ? { color: "red" }  : { color: "green" };
+
+        return <p className="flex items-center justify-center text-[16px]" style={textStyle}> <Circle className="w-[16px] mr-2 "/>{status}</p>;
       }
     },
     {
@@ -72,9 +84,9 @@ const TanstaskTable = () => {
       cell: (props) => <p>
         <div className="flex justify-center items-center">
 
-          <Button onClick={onOpen}><p className="text-red-500"> <Pencil onClick={() => handleEdit(props.row.original.id)} /></p></Button>
-
-          <Trash2 onClick={() => handleDelete(props.row.original.id)} />
+          <Button onClick={onOpen}><p className="text-black text-[12px]"> <Pencil onClick={() => handleEdit(props.row.original.id)} /></p></Button>
+            <p className="text-red-500"><Trash2 onClick={() => handleDelete(props.row.original.id)} /></p>
+          
         </div>
       </p>
     },
@@ -102,15 +114,16 @@ const TanstaskTable = () => {
 
   const handelUpdate = (e) => {
     e.preventDefault()
-       const userName = e.target.user.value ||defaultv.user;
-        const firstName = e.target.first.value|| defaultv.first;
-        const lastName = e.target.last.value|| defaultv.last;
-        const roletName = e.target.role.value|| defaultv.role;
-        const statusName = e.target.status.value|| defaultv.status;
-      const id = defaultv.id
-      const data = { userName, firstName, lastName, roletName,id,statusName}
+    const userName = e.target.user.value || defaultv.user;
+    const firstName = e.target.first.value || defaultv.first;
+    const lastName = e.target.last.value || defaultv.last;
+    const roletName = e.target.role.value || defaultv.role;
+    const statusName = e.target.status.value || defaultv.status;
+    const id = defaultv.id
+    const data = { userName, firstName, lastName, roletName, id, statusName }
     editCard(data)
-   
+    onClose();
+
   }
   console.log(defaultv)
 
@@ -118,10 +131,10 @@ const TanstaskTable = () => {
     data,
     columns,
     state: {
-      
-      globalFilter:filtering
+
+      globalFilter: filtering
     },
-    onGlobalFilterChange:setfiltering,
+    onGlobalFilterChange: setfiltering,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -129,10 +142,7 @@ const TanstaskTable = () => {
   console.log(table.getHeaderGroups())
   return (
 
-    <div className="bg-gray-200">
-
-
-
+    <div >
 
       <Modal
         initialFocusRef={initialRef}
@@ -149,19 +159,19 @@ const TanstaskTable = () => {
             <ModalBody pb={6} >
               <FormControl >
                 <FormLabel className={`cellWithStatus`}>First name</FormLabel>
-                <Input  name='user' ref={initialRef} placeholder='First name' defaultValue={defaultv.userName} />
+                <Input name='user' ref={initialRef} placeholder='First name' defaultValue={defaultv.userName} />
               </FormControl>
               <FormControl>
                 <FormLabel>First name</FormLabel>
-                <Input  name='first' ref={initialRef} placeholder='First name' defaultValue={defaultv.firstName} />
+                <Input name='first' ref={initialRef} placeholder='First name' defaultValue={defaultv.firstName} />
               </FormControl>
               <FormControl>
                 <FormLabel>First name</FormLabel>
-                <Input  name='last' ref={initialRef} placeholder='First name' defaultValue={defaultv.lastName} />
+                <Input name='last' ref={initialRef} placeholder='First name' defaultValue={defaultv.lastName} />
               </FormControl>
               <FormControl>
                 <FormLabel>First name</FormLabel>
-                <Input  name='role' ref={initialRef} placeholder='First name' defaultValue={defaultv.roletName} />
+                <Input name='role' ref={initialRef} placeholder='First name' defaultValue={defaultv.roletName} />
               </FormControl>
 
               <FormControl mt={4}>
@@ -171,8 +181,8 @@ const TanstaskTable = () => {
                   name='status'
                   defaultValue={defaultv?.statusName}
                 >
-                  <option value="incomplete">Incomplete</option>
-                  <option value="complete">Completed</option>
+                  <option value="Active">Active</option>
+                  <option value="Disabled">Disabled</option>
                 </select>
               </FormControl>
             </ModalBody>
@@ -187,55 +197,72 @@ const TanstaskTable = () => {
         </form>
       </Modal>
 
-      <Box color="black" className="mb-7 ">
+      <div >
+      <div className="mb-7 ">
         {/* header text */}
 
         <div className="flex justify-between mt-5 ">
-          <div><Outlet></Outlet></div>
-          <div className="flex gap-2">
+          <div className=""><Outlet></Outlet></div>
+          <div className="flex gap-2 mb-2">
             <div className="mt-3 border ">
-             <input className="bg-white text-black" placeholder="Search For People" type="text" value={filtering} onChange={(e) => setfiltering(e.target.value)} />
+            
+              <input className="bg-white border border-black rounded text-black" placeholder="Search For People" type="text" value={filtering} onChange={(e) => setfiltering(e.target.value)} />
             </div>
-            <div>
+            <div >
               <Tasktable></Tasktable>
 
             </div>
           </div>
 
         </div>
-        <Box color="black" className="table" w={table.getTotalSize()}>
+        {/* <Box color="black" className="table" w={table.getTotalSize()}> */}
 
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Box className="tr" key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Box className="th" w={header.getSize()} key={header.id}>
+        <div className="  rounded-lg">
+          <div  >
+            {table.getHeaderGroups().map((headerGroup) => (
+              <div className="grid grid-cols-6 text-[16px] " key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <div className='bg-gray-300 py-3 ' style={{ width: header.getSize() }} key={header.id}>
+                    {header.column.columnDef.header}
+                    {header.column.getCanSort() && (
+                      <Icon
+                        as={SortIcon}
+                        mx={3}
+                        fontSize={14}
+                        onClick={header.column.getToggleSortingHandler()}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
 
-                  {header.column.columnDef.header}
-                  {header.column.getCanSort() && (
-                    <Icon
-                      as={SortIcon}
-                      mx={3}
-                      fontSize={14}
-                      onClick={header.column.getToggleSortingHandler()}
-                    />
-                  )}
-                </Box>
-
-              ))}
-            </Box>))}
           {/* middle-text */}
-          {table.getRowModel().rows.map((row) => (
-            <Box className="tr" key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <Box className="td" w={cell.column.getSize()} key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </Box>
-              ))}
-            </Box>
-          ))}
 
-        </Box>
-      </Box >
+          <div >
+            {table.getRowModel().rows.map((row) => (
+
+              <div className={styles.tr} >
+                <div className="grid grid-cols-6"key={row.id}>
+
+                  {row.getVisibleCells().map((cell) => (
+
+                    <div className={styles.td} style={{ width: cell.column.getSize() }} key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+
+
+        </div>
+      </div>
+     
+      </div>
 
     </div>
 

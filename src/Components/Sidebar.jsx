@@ -1,4 +1,4 @@
-import React, { Children, useState } from "react";
+import React, {  useState } from "react";
 
 import { Link, Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -66,11 +66,11 @@ const Sidebar = () => {
         </div>
       </div>
     
-      <div className="m-3 text-xl  text-gray-900 font-semibold">
+      <div className="m-3 text-xl  text-gray-900 font-semibold ">
       
-          <div className="flex justify-between items-end p-3 border border-gray-500 border-radius rounded ">
+          <div className="flex justify-between items-end p-3 border bg-white border-gray-500 border-radius rounded-lg ">
           <div><Outlet></Outlet></div>
-          <div> <Navbar></Navbar></div>
+          <div className=""> <Navbar></Navbar></div>
 
      
 
@@ -78,7 +78,7 @@ const Sidebar = () => {
 
        
 
-        <div  className="bg-gray-100"><TanstaskTable></TanstaskTable></div>
+        <div  className="mr-24"><TanstaskTable></TanstaskTable></div>
       </div>
 
     </section>

@@ -1,17 +1,13 @@
 import React from 'react';
 
-import { Outlet } from 'react-router-dom';
+
 
 import Sidebar from '../Components/Sidebar';
 
 const Layout = () => {
     return (
-        <div >
-              
-              
-                
-                <Sidebar></Sidebar>
-            
+        <div >            
+                <Sidebar></Sidebar>        
         </div>
     );
 };

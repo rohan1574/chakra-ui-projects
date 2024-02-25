@@ -1,8 +1,4 @@
 
-// import Table from './Components/Table'
-// import TanstaskTable from './Components/TanstaskTable'
-// import Tasktable from './Components/Tasktable'
-// import { Routes, Route } from "react-router-dom";
 import { Route, Routes } from "react-router-dom";
 
 import { ChakraProvider } from "@chakra-ui/react";
