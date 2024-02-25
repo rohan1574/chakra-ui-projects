@@ -154,32 +154,33 @@ const TanstaskTable = () => {
         <ModalOverlay />
         <form onSubmit={handelUpdate}>
           <ModalContent >
-            <ModalHeader>Create your account</ModalHeader>
+          
             <ModalCloseButton />
-            <ModalBody pb={6} >
+            <ModalBody pb={6} className="text-white">
               <FormControl >
-                <FormLabel className={`cellWithStatus`}>First name</FormLabel>
-                <Input name='user' ref={initialRef} placeholder='First name' defaultValue={defaultv.userName} />
+                <FormLabel className={`cellWithStatus`}>User name</FormLabel>
+                <Input className="text-white" name='user' ref={initialRef} placeholder='User name' defaultValue={defaultv.userName} />
               </FormControl>
               <FormControl>
                 <FormLabel>First name</FormLabel>
-                <Input name='first' ref={initialRef} placeholder='First name' defaultValue={defaultv.firstName} />
+                <Input className="text-white" name='first' ref={initialRef} placeholder='First name' defaultValue={defaultv.firstName} />
               </FormControl>
               <FormControl>
-                <FormLabel>First name</FormLabel>
-                <Input name='last' ref={initialRef} placeholder='First name' defaultValue={defaultv.lastName} />
+                <FormLabel>Last name</FormLabel>
+                <Input className="text-white" name='last' ref={initialRef} placeholder='Last name' defaultValue={defaultv.lastName} />
               </FormControl>
               <FormControl>
-                <FormLabel>First name</FormLabel>
-                <Input name='role' ref={initialRef} placeholder='First name' defaultValue={defaultv.roletName} />
+                <FormLabel >Role name</FormLabel>
+                <Input className="text-white" name='role' ref={initialRef} placeholder='Role name' defaultValue={defaultv.roletName} />
               </FormControl>
 
               <FormControl mt={4}>
-                <FormLabel>Last name</FormLabel>
-                <select className='border border-cyan-300 '
+                <FormLabel>Status name</FormLabel>
+                <select className='border border-cyan-300 text-white'
                   id="type"
                   name='status'
                   defaultValue={defaultv?.statusName}
+                  
                 >
                   <option value="Active">Active</option>
                   <option value="Disabled">Disabled</option>

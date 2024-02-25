@@ -39,7 +39,7 @@ const Tasktable = () => {
 
     return (
         <div>
-            <div onClick={onOpen} className='text-white bg-blue-500 rounded-lg p-2'>
+            <div onClick={onOpen} className='text-white text-[16px] bg-blue-500 rounded-lg p-2'>
 
                 New User
             </div>
@@ -50,32 +50,33 @@ const Tasktable = () => {
                 finalFocusRef={finalRef}
                 isOpen={isOpen}
                 onClose={onClose}
+                
             >
                 <ModalOverlay />
                 <form onSubmit={handleSubmit} >
                     <ModalContent >
-                        <ModalHeader>Create your account</ModalHeader>
+                        
                         <ModalCloseButton />
-                        <ModalBody pb={6} >
+                        <ModalBody pb={6} className="text-white">
                             <FormControl >
-                                <FormLabel className={`cellWithStatus`}>First name</FormLabel>
-                                <Input name='user' ref={initialRef} placeholder='First name' />
+                                <FormLabel >User name</FormLabel>
+                                <Input name='user' ref={initialRef} placeholder='User name' />
                             </FormControl>
                             <FormControl>
                                 <FormLabel>First name</FormLabel>
                                 <Input name='first' ref={initialRef} placeholder='First name' />
                             </FormControl>
                             <FormControl>
-                                <FormLabel>First name</FormLabel>
-                                <Input name='last' ref={initialRef} placeholder='First name' />
+                                <FormLabel>Last name</FormLabel>
+                                <Input name='last' ref={initialRef} placeholder='Last name' />
                             </FormControl>
                             <FormControl>
-                                <FormLabel>First name</FormLabel>
-                                <Input name='role' ref={initialRef} placeholder='First name' />
+                                <FormLabel>Role name</FormLabel>
+                                <Input name='role' ref={initialRef} placeholder='Role name' />
                             </FormControl>
 
                             <FormControl mt={4}>
-                                <FormLabel>Last name</FormLabel>
+                                <FormLabel>status name</FormLabel>
                                 <select className='border border-cyan-300 '
                                     id="type"
                                     name='status'
