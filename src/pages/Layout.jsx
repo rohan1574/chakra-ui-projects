@@ -6,7 +6,7 @@ import Sidebar from '../Components/Sidebar';
 
 const Layout = () => {
     return (
-        <div >            
+        <div className="bg-red-500 max-w-8xl mx-auto" >            
                 <Sidebar></Sidebar>        
         </div>
     );

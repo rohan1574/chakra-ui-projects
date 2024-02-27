@@ -39,7 +39,7 @@ const Tasktable = () => {
 
     return (
         <div>
-            <div onClick={onOpen} className='text-white text-[16px] bg-blue-500 rounded-lg p-2'>
+            <div onClick={onOpen} className='text-white text-[16px] bg-blue-500 px-4 rounded-lg p-2'>
 
                 New User
             </div>

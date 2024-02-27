@@ -18,8 +18,10 @@ import SortIcon from "../icons/SortIcon";
 import Tasktable from "./Tasktable";
 import { editCard, getData, removeCard } from "../../public/localStorage";
 import { Outlet } from "react-router-dom";
-import { Circle, Pencil, Search, Trash2 } from "lucide-react";
+import { Pencil, Search, Trash2 } from "lucide-react";
 import styles from './styles.module.scss';
+import { debounce } from "lodash";
+
 const TanstaskTable = () => {
 
   const [filtering, setfiltering] = useState('');
@@ -29,21 +31,25 @@ const TanstaskTable = () => {
 
   const initialRef = React.useRef(null)
   const finalRef = React.useRef(null)
+  const debouncedSetFiltering = debounce((value) => {
+    setfiltering(value);
+  }, 2000); 
+
   useEffect(() => {
     const fetchData = async () => {
       const dataFromStorage = getData();
       setData(dataFromStorage);
     };
 
-    fetchData(); // Fetch data initially when the component mounts
+    fetchData(); 
 
-    // Setup polling interval
-    const intervalId = setInterval(fetchData, 500); // Poll every 5 seconds (adjust as needed)
+    
+    const intervalId = setInterval(fetchData, 500);
 
-    // Cleanup function to clear interval when component unmounts
+    
     return () => clearInterval(intervalId);
   }, []);
-  console.log(data)
+
 
   const columns = [
     {
@@ -72,21 +78,25 @@ const TanstaskTable = () => {
       header: "Status",
       cell: (props) => {
         const status = props.getValue();
-        
-        const textStyle = status === "Active" ? { color: "red" }  : { color: "green" };
 
-        return <p className="flex items-center justify-center text-[16px]" style={textStyle}> <Circle className="w-[16px] mr-2 "/>{status}</p>;
+        const textStyle = status === "Active" ? { background: "green" } : { background: "red" };
+
+        return <div className="flex text-[16px] items-center gap-3">
+          <p className="flex items-center border-0 rounded-full justify-center  p-0  w-3 h-3" style={textStyle}> </p>
+          <p>{status}</p>
+        </div>
+
       }
     },
     {
       accessorKey: "action",
       header: "action",
       cell: (props) => <p>
-        <div className="flex justify-center items-center">
+        <div className="flex  items-center text-[12px] text-gray-400">
 
-          <Button onClick={onOpen}><p className="text-black text-[12px]"> <Pencil onClick={() => handleEdit(props.row.original.id)} /></p></Button>
-            <p className="text-red-500"><Trash2 onClick={() => handleDelete(props.row.original.id)} /></p>
-          
+          <Button onClick={onOpen}><p className="text-gray-400 text-[12px]"> <Pencil onClick={() => handleEdit(props.row.original.id)} /></p></Button>
+          <p  ><Trash2 onClick={() => handleDelete(props.row.original.id)} /></p>
+
         </div>
       </p>
     },
@@ -94,21 +104,14 @@ const TanstaskTable = () => {
   ];
   const handleDelete = (id) => {
     console.log({ id });
-    removeCard(id); // Assuming removeCard is a function that removes the card with the specified id from the data source
-    // Update the data after deletion
+    removeCard(id); 
   };
   const handleEdit = (id) => {
 
-
-
-    console.log(`Edit button clicked for id: ${id}`);
-    // Implement your edit logic here
     const data = getData()
     console.log(data)
     const findValue = data.find(p => p.id === id)
     setDefaultv(findValue)
-
-    // document.getElementById('my_modal_1').showModal()
 
   };
 
@@ -125,7 +128,7 @@ const TanstaskTable = () => {
     onClose();
 
   }
-  console.log(defaultv)
+
 
   const table = useReactTable({
     data,
@@ -139,7 +142,7 @@ const TanstaskTable = () => {
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
-  console.log(table.getHeaderGroups())
+
   return (
 
     <div >
@@ -154,7 +157,7 @@ const TanstaskTable = () => {
         <ModalOverlay />
         <form onSubmit={handelUpdate}>
           <ModalContent >
-          
+
             <ModalCloseButton />
             <ModalBody pb={6} className="text-white">
               <FormControl >
@@ -180,7 +183,7 @@ const TanstaskTable = () => {
                   id="type"
                   name='status'
                   defaultValue={defaultv?.statusName}
-                  
+
                 >
                   <option value="Active">Active</option>
                   <option value="Disabled">Disabled</option>
@@ -199,70 +202,77 @@ const TanstaskTable = () => {
       </Modal>
 
       <div >
-      <div className="mb-7 ">
-        {/* header text */}
+        <div className="mb-7 ">
+          {/* header text */}
 
-        <div className="flex justify-between mt-5 ">
-          <div className=""><Outlet></Outlet></div>
-          <div className="flex gap-2 mb-2">
-            <div className="mt-3 border ">
-            
-              <input className="bg-white border border-black rounded text-black" placeholder="Search For People" type="text" value={filtering} onChange={(e) => setfiltering(e.target.value)} />
-            </div>
-            <div >
-              <Tasktable></Tasktable>
-
-            </div>
-          </div>
-
-        </div>
-        {/* <Box color="black" className="table" w={table.getTotalSize()}> */}
-
-        <div className="  rounded-lg">
-          <div  >
-            {table.getHeaderGroups().map((headerGroup) => (
-              <div className="grid grid-cols-6 text-[16px] " key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <div className='bg-gray-300 py-3 ' style={{ width: header.getSize() }} key={header.id}>
-                    {header.column.columnDef.header}
-                    {header.column.getCanSort() && (
-                      <Icon
-                        as={SortIcon}
-                        mx={3}
-                        fontSize={14}
-                        onClick={header.column.getToggleSortingHandler()}
-                      />
-                    )}
+          <div className="flex justify-between mt-5 ">
+            <div className=""><Outlet></Outlet></div>
+            <div className="flex gap-2 mb-2">
+              <div className="mt-3 border flex text-[16px] gap-2 relative">
+                <div className="relative">
+                  <div className="absolute top-1/2 left-2 transform  text-[12px] -translate-y-1/2 text-gray-300">
+                    <Search />
                   </div>
-                ))}
+                  <input
+                    className="bg-white border border-black text-[16px] rounded text-[16px] pl-10"
+                    placeholder="Search For People"
+                    type="text"
+                    value={filtering}
+                    onChange={(e) => debouncedSetFiltering(e.target.value)}
+                  />
+                </div>
               </div>
-            ))}
+              <div>
+                <Tasktable></Tasktable>
+              </div>
+            </div>
           </div>
 
-          {/* middle-text */}
-
-          <div >
-            {table.getRowModel().rows.map((row) => (
-
-              <div className={styles.tr} >
-                <div className="grid grid-cols-6"key={row.id}>
-
-                  {row.getVisibleCells().map((cell) => (
-
-                    <div className={styles.td} style={{ width: cell.column.getSize() }} key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          <div className="rounded-lg border-2 border-gray-300 ">
+            <div>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <div className="grid grid-cols-6 text-[16px] " key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <div className='bg-gray-200 py-3 px-5 text-gray-700' key={header.id}>
+                      {header.column.columnDef.header}
+                      {header.column.getCanSort() && (
+                        <Icon
+                          as={SortIcon}
+                          mx={3}
+                          fontSize={14}
+                          onClick={header.column.getToggleSortingHandler()}
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* middle-text */}
+
+            <div className="">
+              {table.getRowModel().rows.map((row) => (
+
+                <div className={styles.tr} >
+                  <div className="grid grid-cols-6 text-gray-800 text-[12px] font-normal" key={row.id}>
+
+                    {row.getVisibleCells().map((cell) => (
+
+                      <div className={styles.td} key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+
+
           </div>
-
-
-
         </div>
-      </div>
-     
+
       </div>
 
     </div>

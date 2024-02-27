@@ -18,28 +18,28 @@ import { ChevronDownCircle } from 'lucide-react';
 const Navbar = () => {
   return (
     
-    <div className=''>
+    <div className='gap-4'>
       
       <Popover>
 
         <PopoverTrigger>
           <WrapItem>
-           <div > <Avatar name='Dan Abrahmov' src='https://bit.ly/dan-abramov' /></div>
+           <div > <Avatar className='' src='https://bit.ly/dan-abramov' /></div>
             <div className=''>
-              <p className=' text-blue-400 text-[16px] ml-2 '>John Doe</p>
-              <p className='text-[14px] ml-2 -mt-2'>Admin</p>
+              <p className=' text-blue-600 text-[16px] ml-2 '>John Doe</p>
+              <p className='text-gray-300 text-[14px] ml-2 -mt-2'>Admin</p>
             </div>
-           <div className='mt-2  bg-gray-300 rounded-full  '>  <ChevronDownCircle />
+           <div className='mt-2 ml-2 bg-gray-100 text-gray-300 rounded-full  '>  <ChevronDownCircle />
            </div>
 
           </WrapItem>
 
         </PopoverTrigger>
-        <div>
+        <div className='mr-5'>
           <PopoverContent>
             <PopoverArrow />
             <PopoverCloseButton />
-            <div  className='bg-white'>
+            <div  className='bg-white '>
             <PopoverHeader>Profile</PopoverHeader>
             <hr className='bg-black'></hr>
             <PopoverBody>Login</PopoverBody>
