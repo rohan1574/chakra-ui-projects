@@ -1,6 +1,6 @@
 
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
 
 import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Icon, Input, Stack, useDisclosure } from "@chakra-ui/react";
@@ -22,7 +22,7 @@ import { Pencil, Search, Trash2 } from "lucide-react";
 import styles from './styles.module.scss';
 import { Select } from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/react'
-import { debounce } from "lodash";
+
 
 const TanstaskTable = () => {
 
@@ -38,10 +38,21 @@ const TanstaskTable = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState('');
+    
+ 
+  function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
 
-  const debouncedSetFiltering = debounce((value) => {
-    setfiltering(value);
-  }, 2000); 
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -201,15 +212,12 @@ const TanstaskTable = () => {
   const table = useReactTable({
     data,
     columns,
-    state: {
-
-      globalFilter: filtering
-    },
-    onGlobalFilterChange: setfiltering,
+    state: { globalFilter: debouncedGlobalFilter },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),   
+    onGlobalFilterChange: setGlobalFilter,
     getSortedRowModel: getSortedRowModel(),
-  });
+});
 
   return (
 
@@ -343,8 +351,8 @@ const TanstaskTable = () => {
                     className="bg-white font-semibold border-2 border-gray-200 text-[14px] rounded-lg pl-10 py-2 "
                     placeholder="Search For People"
                     type="text"
-                    value={filtering}
-                    onChange={(e) => debouncedSetFiltering(e.target.value)}
+                    value={globalFilter}
+                onChange={e => setGlobalFilter(e.target.value)}
                   />
                 </div>
               </div>
