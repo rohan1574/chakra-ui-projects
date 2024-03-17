@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable,getPaginationRowModel } from '@tanstack/react-table';
 import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Icon, Input, Stack, useDisclosure } from "@chakra-ui/react";
 import {
   Modal,
@@ -14,7 +14,7 @@ import {
   ModalCloseButton,
 } from '@chakra-ui/react'
 import "../theme/styles";
-import SortIcon from "../icons/SortIcon";
+import SortIcon from "./SortIcon";
 import Tasktable from "./Tasktable";
 import { editCard, getData, removeCard } from "../../public/localStorage";
 import { Outlet } from "react-router-dom";
@@ -22,7 +22,6 @@ import { Pencil, Search, Trash2 } from "lucide-react";
 import styles from '../styles/modules/styles.module.scss';
 import { Select } from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/react'
-import MyPagination from './MyPagination'
 
 
 const TanstaskTable = () => {
@@ -40,29 +39,28 @@ const TanstaskTable = () => {
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [globalFilter, setGlobalFilter] = useState('');
-    
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(3);
-  const [totalItems, setTotalItems] = useState(data.length);
-  
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 5,
+  })
   function useDebounce(value, delay) {
     const [debouncedValue, setDebouncedValue] = useState(value);
 
     useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
+      const handler = setTimeout(() => setDebouncedValue(value), delay);
 
-        return () => clearTimeout(handler);
+      return () => clearTimeout(handler);
     }, [value, delay]);
 
     return debouncedValue;
-}
-const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
+  }
+  const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
   useEffect(() => {
     const fetchData = async () => {
       const dataFromStorage = getData();
       setData(dataFromStorage);
-      setTotalItems(dataFromStorage.length);
     };
 
     fetchData();
@@ -73,20 +71,6 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
     return () => clearInterval(intervalId);
   }, []);
-
-  const handlePageChange = (page) => {
-    console.log("New page:", page);
-    setCurrentPage(page);
-  };
-  
-
-  // Calculate start and end indexes for the sliced data
-  const startIdx = (currentPage - 1) * pageSize;
-  const endIdx = Math.min(startIdx + pageSize, totalItems);
-
-  // Slice the data array to get the data for the current page
-  const slicedData = data.slice(startIdx, endIdx);
-
 
 
 
@@ -229,17 +213,23 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
   }
 
   const table = useReactTable({
-    data: slicedData, // Use slicedData based on current page and page size
+    data,
     columns,
+    debugTable: false,
     state: { globalFilter: debouncedGlobalFilter },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    autoResetPageIndex: false,
+    autoResetPageIndex: false, 
+    onPaginationChange: setPagination,
+    //no need to pass pageCount or rowCount with client-side pagination as it is calculated automatically
+    state: {
+      pagination,
+    },
+    
   });
-  
 
   return (
 
@@ -374,7 +364,7 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                     placeholder="Search For People"
                     type="text"
                     value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
+                    onChange={e => setGlobalFilter(e.target.value)}
                   />
                 </div>
               </div>
@@ -424,18 +414,83 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
               ))}
             </div>
 
-
+           
 
           </div>
         </div>
-        <MyPagination
-        currentPage={currentPage}
-        totalItems={totalItems}
-        pageSize={pageSize}
+
         
-        handlePageChange={handlePageChange}
-      />
+
       </div>
+      <div className="flex items-center gap-2">
+        <button
+          className="border rounded p-1"
+          onClick={() => table.firstPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {'<<'}
+        </button>
+        <button
+          className="border rounded p-1"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          {'<'}
+        </button>
+        <button
+          className="border rounded p-1"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          {'>'}
+        </button>
+        <button
+          className="border rounded p-1"
+          onClick={() => table.lastPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          {'>>'}
+        </button>
+        <span className="flex items-center gap-1">
+          <div>Page</div>
+          <strong>
+            {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount().toLocaleString()}
+          </strong>
+        </span>
+        <span className="flex items-center gap-1">
+          | Go to page:
+          <input
+            type="number"
+            defaultValue={table.getState().pagination.pageIndex + 1}
+            
+            onChange={e => {
+              const page = e.target.value ? Number(e.target.value) - 1 : 0
+              table.setPageIndex(page)
+            }}
+            
+            className="border p-1 rounded bg-blue-500 w-16"
+          />
+          
+        </span>
+        <select
+         className="border p-1 rounded bg-blue-500 w-30"
+          value={table.getState().pagination.pageSize}
+          onChange={e => {
+            table.setPageSize(Number(e.target.value))
+          }}
+        >
+          {[10, 20, 30, 40, 50].map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              
+              Show {pageSize}
+              
+            </option>
+            
+          ))}
+        </select>
+      </div>
+      <div></div>
 
     </div>
 
