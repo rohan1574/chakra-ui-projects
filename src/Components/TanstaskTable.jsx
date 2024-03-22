@@ -15,14 +15,16 @@ import {
 } from '@chakra-ui/react'
 import "../theme/styles";
 import SortIcon from "../icons/SortIcon";
-import Tasktable from "./Tasktable";
-import { editCard, getData, removeCard } from "../../public/localStorage";
+
+
 import { Outlet } from "react-router-dom";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import styles from '../styles/modules/styles.module.scss';
-import { Select } from '@chakra-ui/react'
+
 import { useToast } from '@chakra-ui/react'
 import MyPagination from './MyPagination'
+import Tasktable from './Tasktable';
+import axios from 'axios';
 
 
 const TanstaskTable = () => {
@@ -40,45 +42,62 @@ const TanstaskTable = () => {
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [globalFilter, setGlobalFilter] = useState('');
-    
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(3);
   const [totalItems, setTotalItems] = useState(data.length);
-  
+// dgdhgjsdh
+
+const [userData, setUserData] = useState([]);
+
+
+
+
+
+
+
+
   function useDebounce(value, delay) {
     const [debouncedValue, setDebouncedValue] = useState(value);
 
     useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
+      const handler = setTimeout(() => setDebouncedValue(value), delay);
 
-        return () => clearTimeout(handler);
+      return () => clearTimeout(handler);
     }, [value, delay]);
 
     return debouncedValue;
-}
-const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
+  }
+  const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
   useEffect(() => {
     const fetchData = async () => {
-      const dataFromStorage = getData();
-      setData(dataFromStorage);
-      setTotalItems(dataFromStorage.length);
+      try {
+        const response = await axios.get(`https://jsonplaceholder.typicode.com/users`);
+        
+        setData( response.data);
+       
+         // Set user data separately
+        setTotalItems(response.data.length);
+        console.log(response.data.length)
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
 
     fetchData();
-
-
     const intervalId = setInterval(fetchData, 500);
-
-
     return () => clearInterval(intervalId);
-  }, []);
+  }, [data]);
+
+  // Function to handle saving new user data
+  
 
   const handlePageChange = (page) => {
     console.log("New page:", page);
     setCurrentPage(page);
   };
-  
+
 
   // Calculate start and end indexes for the sliced data
   const startIdx = (currentPage - 1) * pageSize;
@@ -93,17 +112,17 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
   const columns = [
     {
-      accessorKey: "userName",
+      accessorKey: "name",
       header: "USER NAME",
       cell: (props) => <p className="text-[16px] ">{props.getValue()}</p>
     },
     {
-      accessorKey: "firstName",
+      accessorKey: "username",
       header: "FIRST NAME",
       cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
     },
     {
-      accessorKey: "lastName",
+      accessorKey: "email",
       header: "LAST NAME",
       cell: (props) => <p className="text-[16px] ml-2">{props.getValue()}</p>
     },
@@ -239,7 +258,7 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
     getPaginationRowModel: getPaginationRowModel(),
     autoResetPageIndex: false,
   });
-  
+
 
   return (
 
@@ -285,9 +304,9 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                   name='user'
                   ref={initialRef}
                   placeholder='User name'
-                  defaultValue={defaultv.userName}
+
                   required // Make the input required
-                  isInvalid={defaultv.user && !isInputValid(defaultv.user)}
+
                 />
               </FormControl>
               <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
@@ -297,9 +316,9 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                   name='first'
 
                   placeholder='First name'
-                  defaultValue={defaultv.firstName}
+
                   required // Make the input required
-                  isInvalid={defaultv.first && !isInputValid(defaultv.first)}
+
                 />
               </FormControl>
               <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
@@ -309,9 +328,9 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                   name='last'
 
                   placeholder='Last name'
-                  defaultValue={defaultv.lastName}
+
                   required // Make the input required
-                  isInvalid={defaultv.last && !isInputValid(defaultv.last)}
+
                 />
 
               </FormControl>
@@ -322,9 +341,9 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                   name='role'
 
                   placeholder='Role name'
-                  defaultValue={defaultv.roletName}
+
                   required
-                  isInvalid={defaultv.role && !isInputValid(defaultv.role)}
+
                 />
 
               </FormControl>
@@ -334,16 +353,7 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                   {errorMessage}
                 </Alert>
               )}
-              <FormControl mt={4} className='border-solid border-5 border-indigo-600 '>
-                <FormLabel>Status name</FormLabel>
-                <Select className='border border-cyan-300 text-white' placeholder='Select option' id="type"
-                  name='status'
-                  defaultValue={defaultv?.statusName} required>
-                  <option value="Active">Active</option>
-                  <option value="Disabled">Disabled</option>
-                </Select>
 
-              </FormControl>
             </ModalBody>
 
             <ModalFooter>
@@ -374,12 +384,14 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
                     placeholder="Search For People"
                     type="text"
                     value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
+                    onChange={e => setGlobalFilter(e.target.value)}
                   />
                 </div>
               </div>
               <div>
-                <Tasktable></Tasktable>
+              <Tasktable setData={setData} />
+
+                
               </div>
             </div>
           </div>
@@ -429,12 +441,12 @@ const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
           </div>
         </div>
         <MyPagination
-        currentPage={currentPage}
-        totalItems={totalItems}
-        pageSize={pageSize}
-        
-        handlePageChange={handlePageChange}
-      />
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+
+          handlePageChange={handlePageChange}
+        />
       </div>
 
     </div>
