@@ -46,9 +46,13 @@ const TanstaskTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(3);
   const [totalItems, setTotalItems] = useState(data.length);
-// dgdhgjsdh
+  // dgdhgjsdh
 
-const [userData, setUserData] = useState([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    username: '',
+    email: ''
+  });
 
 
 
@@ -73,13 +77,13 @@ const [userData, setUserData] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/users`);
-        
-        setData( response.data);
-       
-         // Set user data separately
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+
+        setData(response.data);
+
+        // Set user data separately
         setTotalItems(response.data.length);
-        console.log(response.data.length)
+        
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -88,10 +92,44 @@ const [userData, setUserData] = useState([]);
     fetchData();
     const intervalId = setInterval(fetchData, 500);
     return () => clearInterval(intervalId);
-  }, [data]);
+  }, []);
 
   // Function to handle saving new user data
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
   
+    try {
+      // Access form data from the event object
+      const formData = new FormData(e.target);
+      
+      // Create an object to hold form data
+      const postData = {};
+      formData.forEach((value, key) => {
+        postData[key] = value;
+      });
+  
+      // Make POST request to your API
+      const response = await axios.post('https://jsonplaceholder.typicode.com/users', postData);
+  
+      // Handle success, maybe show a success message
+      console.log('User created successfully:', response.data);
+      setData([...data, response.data]);
+      setShowSuccessModal(true);
+      onClose(); // Close the modal after successful submission
+      // You may also want to update the user list or do any necessary actions
+    } catch (error) {
+      // Handle error, maybe show an error message
+      console.error('Error creating user:', error);
+      setErrorMessage('Failed to create user. Please try again.');
+    }
+  };
+  
+
+  const handleOpenModal = () => {
+    onOpen();
+  }
+
 
   const handlePageChange = (page) => {
     console.log("New page:", page);
@@ -114,7 +152,7 @@ const [userData, setUserData] = useState([]);
     {
       accessorKey: "name",
       header: "USER NAME",
-      cell: (props) => <p className="text-[16px] ">{props.getValue()}</p>
+      cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
     },
     {
       accessorKey: "username",
@@ -126,27 +164,9 @@ const [userData, setUserData] = useState([]);
       header: "LAST NAME",
       cell: (props) => <p className="text-[16px] ml-2">{props.getValue()}</p>
     },
-    {
-      accessorKey: "roletName",
-      header: "ROLE",
-      cell: (props) => <p className="text-[16px] ml-2">{props.getValue()}</p>
-    },
 
-    {
-      accessorKey: "statusName",
-      header: "STATE",
-      cell: (props) => {
-        const status = props.getValue();
 
-        const textStyle = status === "Active" ? { background: "green" } : { background: "red" };
 
-        return <div className="flex text-[16px] items-center gap-3 ml-4">
-          <p className="flex items-center border-0 rounded-full justify-center  p-0  w-3 h-3" style={textStyle}> </p>
-          <p>{status}</p>
-        </div>
-
-      }
-    },
     {
       accessorKey: "action",
       header: "ACTION",
@@ -166,86 +186,7 @@ const [userData, setUserData] = useState([]);
     },
 
   ];
-  const handleDelete = (id) => {
-    setShowDeleteConfirmation(true);
-    setDeleteItemId(id);
-  };
 
-  const confirmDelete = () => {
-    removeCard(deleteItemId);
-    setShowDeleteConfirmation(false);
-    // After deletion, you might want to refresh your data
-    const updatedData = data.filter(item => item.id !== deleteItemId);
-    setData(updatedData);
-    toast({
-      title: "User Deleted",
-      description: "User has been deleted successfully.",
-      status: "success",
-      duration: 3000, // Toast will automatically disappear after 3 seconds
-      isClosable: true,
-      position: "top", // Display toast at the top
-    });
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirmation(false);
-  };
-  const handleEdit = (id) => {
-
-    const data = getData()
-    console.log(data)
-    const findValue = data.find(p => p.id === id)
-    setDefaultv(findValue)
-
-  };
-
-  const handelUpdate = (e) => {
-    e.preventDefault();
-    // Flag to track if any field is invalid
-
-    const userName = e.target.user.value || defaultv.user;
-    if (!userName || userName.length < 2) {
-      setErrorMessage("All UserName must contain  two characters.");
-      return;
-    }
-
-    const firstName = e.target.first.value || defaultv.first;
-    if (!firstName || firstName.length < 2) {
-      setErrorMessage("All FirstName must contain two characters.");
-      return;
-    }
-
-    const lastName = e.target.last.value || defaultv.last;
-    if (!lastName || lastName.length < 2) {
-      setErrorMessage("All lastName must contain  two characters.");
-      return;
-    }
-
-    const roletName = e.target.role.value || defaultv.role;
-    if (!roletName || roletName.length < 2) {
-      setErrorMessage("All roleName must contain  two characters.");
-      return;
-    }
-
-    const statusName = e.target.status.value || defaultv.status;
-    const id = defaultv.id;
-    const data = { userName, firstName, lastName, roletName, id, statusName };
-    setShowSuccessModal(true);
-
-    toast({
-      title: "User Update Created",
-      description: "User has been update created successfully.",
-      status: "success",
-      duration: 3000, // Toast will automatically disappear after 3 seconds
-      isClosable: true,
-      position: "top", // Display toast at the top
-    });
-
-    editCard(data);
-    setShowAlert(false);
-    onClose();
-
-  }
 
   const table = useReactTable({
     data: slicedData, // Use slicedData based on current page and page size
@@ -264,108 +205,8 @@ const [userData, setUserData] = useState([]);
 
     <div >
 
-      {/* delete button show */}
-      {showDeleteConfirmation && (
-        <Modal isOpen={showDeleteConfirmation} onClose={cancelDelete}>
-          <ModalOverlay />
-          <ModalContent className="bg-blue-500">
-            <ModalHeader className="text-white">Delete Confirmation</ModalHeader>
-            <ModalCloseButton className="text-red-500" />
-            <ModalBody className="text-white">
-              Are you sure you want to delete this item?
-            </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="red" mr={3} onClick={confirmDelete}>
-                Delete
-              </Button>
-              <Button onClick={cancelDelete}>Cancel</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      )}
 
-      <Modal
-        initialFocusRef={initialRef}
-        finalFocusRef={finalRef}
-        isOpen={isOpen}
-        onClose={onClose}
 
-      >
-
-        <ModalOverlay />
-        <form onSubmit={handelUpdate}>
-          <ModalContent>
-            <ModalCloseButton onClick={onClose} className='text-red-500' />
-            <ModalBody pb={6} className="text-white">
-              <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                <FormLabel className={`cellWithStatus`}>User name</FormLabel>
-                <Input
-                  className="text-white"
-                  name='user'
-                  ref={initialRef}
-                  placeholder='User name'
-
-                  required // Make the input required
-
-                />
-              </FormControl>
-              <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                <FormLabel>First name</FormLabel>
-                <Input
-                  className="text-white"
-                  name='first'
-
-                  placeholder='First name'
-
-                  required // Make the input required
-
-                />
-              </FormControl>
-              <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                <FormLabel>Last name</FormLabel>
-                <Input
-                  className="text-white"
-                  name='last'
-
-                  placeholder='Last name'
-
-                  required // Make the input required
-
-                />
-
-              </FormControl>
-              <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                <FormLabel>Role name</FormLabel>
-                <Input
-                  className="text-white"
-                  name='role'
-
-                  placeholder='Role name'
-
-                  required
-
-                />
-
-              </FormControl>
-              {errorMessage && (
-                <Alert status='error' mt={4}>
-                  <AlertIcon />
-                  {errorMessage}
-                </Alert>
-              )}
-
-            </ModalBody>
-
-            <ModalFooter>
-              <Button type="submit" colorScheme='blue' mr={3}>
-                Save
-              </Button>
-              <Button onClick={onClose}>Cancel</Button>
-            </ModalFooter>
-
-          </ModalContent>
-        </form>
-      </Modal>
 
       <div className="">
         <div className="mb-7 ">
@@ -389,9 +230,69 @@ const [userData, setUserData] = useState([]);
                 </div>
               </div>
               <div>
-              <Tasktable setData={setData} />
+                <div>
+                  <div>
+                    <div onClick={handleOpenModal} className='text-white text-[16px] bg-blue-500 px-4 rounded-lg p-2 items-center mt-3 cursor-pointer'>
+                      New User
+                    </div>
 
-                
+                    <Modal
+                      initialFocusRef={initialRef}
+                      finalFocusRef={finalRef}
+                      isOpen={isOpen}
+                      onClose={onClose}
+                      className=' bg-white'
+                    >
+                      <ModalOverlay />
+                      <form onSubmit={handleSubmit}>
+                        <ModalContent className='bg-white'>
+                          <ModalCloseButton onClick={onClose} className='text-red-500' />
+                          <ModalBody pb={6} className="text-white ">
+                            <FormControl className='border-solid border-5 border-indigo-600'>
+                              <FormLabel>User name</FormLabel>
+                              <Input name='name' ref={initialRef} value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder='User name' required />
+                            </FormControl>
+                            <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
+                              <FormLabel>First name</FormLabel>
+                              <Input
+                                name='username'
+                                value={formData.username}
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                placeholder='First name'
+                                required
+                              />
+                            </FormControl>
+                            <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
+                              <FormLabel>Last name</FormLabel>
+                              <Input
+                                name='email'
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                placeholder='Last name'
+                                required
+                              />
+                            </FormControl>
+                            {errorMessage && (
+                              <Alert status='error' mt={4}>
+                                <AlertIcon />
+                                {errorMessage}
+                              </Alert>
+                            )}
+                          </ModalBody>
+                          <ModalFooter>
+                            <Button type="submit" colorScheme='blue' mr={3}>
+                              Save
+                            </Button>
+                            <Button onClick={onClose}>Cancel</Button>
+                          </ModalFooter>
+                        </ModalContent>
+                      </form>
+                    </Modal>
+                  </div>
+                </div>
+
+
               </div>
             </div>
           </div>
@@ -399,7 +300,7 @@ const [userData, setUserData] = useState([]);
           <div className="rounded-lg border-2 border-gray-300 ">
             <div>
               {table.getHeaderGroups().map((headerGroup) => (
-                <div className="grid grid-cols-6 text-[12px] font-bold text-gray-500 " key={headerGroup.id}>
+                <div className="grid grid-cols-4 text-[12px] font-bold text-gray-500 " key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <div className='bg-gray-200 py-4 px-7   font-bold' key={header.id}>
                       {header.column.columnDef.header}
@@ -423,7 +324,7 @@ const [userData, setUserData] = useState([]);
               {table.getRowModel().rows.map((row) => (
 
                 <div className={styles.tr} key={row.id}>
-                  <div className="grid grid-cols-6 text-gray-500 text-[12px] font-normal  items-center justify-center ml-5 " key={row.id}>
+                  <div className="grid grid-cols-4 text-gray-500 text-[12px] font-normal  items-center justify-center ml-5 " key={row.id}>
 
                     {row.getVisibleCells().map((cell) => (
 
