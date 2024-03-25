@@ -49,11 +49,75 @@ const TanstaskTable = () => {
   // dgdhgjsdh
 
   const [formData, setFormData] = useState({
-    name: '',
-    username: '',
-    email: ''
+    userId: "",
+    id: "",
+    title: "",
+    body: "",
   });
+  const { userId, id, title, body } = formData;
+  const [refresh, setRefresh] = useState(0)
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (userId && id && title && body) {
+      axios.post('https://jsonplaceholder.typicode.com/posts', formData)
+        .then(res => {
+          // Assuming res.data is the newly created post
+          const newData = [...data, res.data]; // Add the new data to the existing data array
+          setData(newData);
+          setTotalItems(newData.length); // Update totalItems if necessary
+          setFormData({ userId: "", id: "", title: "", body: "" });
+          setShowSuccessModal(true);
+          onClose();
+        })
+        .catch(err => console.log(err));
+    }
+  };
+
+
+  const handleOpenModal = () => {
+    onOpen();
+  }
+
+  useEffect(() => {
+    axios.get('https://jsonplaceholder.typicode.com/posts')
+      .then(res => {
+        setData(res.data); // Update the state with the newly fetched data
+        setTotalItems(res.data.length); // Update totalItems if necessary
+      })
+      .catch(err => console.log(err));
+  }, []);
+
+
+  const handleDelete = (id) => {
+    axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`)
+      .then(response => {
+        // Handle success, e.g., remove the deleted item from state
+        const newData = data.filter(item => item.id !== id);
+        setData(newData);
+        toast({
+          title: "Item deleted",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      })
+      .catch(error => {
+        // Handle error
+        console.error('Error deleting item:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete item",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      });
+  };
 
 
 
@@ -74,61 +138,16 @@ const TanstaskTable = () => {
   }
   const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
 
-        setData(response.data);
 
-        // Set user data separately
-        setTotalItems(response.data.length);
-        
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
 
-    fetchData();
-    const intervalId = setInterval(fetchData, 500);
-    return () => clearInterval(intervalId);
-  }, []);
 
   // Function to handle saving new user data
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    try {
-      // Access form data from the event object
-      const formData = new FormData(e.target);
-      
-      // Create an object to hold form data
-      const postData = {};
-      formData.forEach((value, key) => {
-        postData[key] = value;
-      });
-  
-      // Make POST request to your API
-      const response = await axios.post('https://jsonplaceholder.typicode.com/users', postData);
-  
-      // Handle success, maybe show a success message
-      console.log('User created successfully:', response.data);
-      setData([...data, response.data]);
-      setShowSuccessModal(true);
-      onClose(); // Close the modal after successful submission
-      // You may also want to update the user list or do any necessary actions
-    } catch (error) {
-      // Handle error, maybe show an error message
-      console.error('Error creating user:', error);
-      setErrorMessage('Failed to create user. Please try again.');
-    }
-  };
-  
 
-  const handleOpenModal = () => {
-    onOpen();
-  }
+
+
+
 
 
   const handlePageChange = (page) => {
@@ -150,18 +169,23 @@ const TanstaskTable = () => {
 
   const columns = [
     {
-      accessorKey: "name",
-      header: "USER NAME",
+      accessorKey: "userId",
+      header: "USER Id",
       cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
     },
     {
-      accessorKey: "username",
-      header: "FIRST NAME",
+      accessorKey: "id",
+      header: "Id NAME",
       cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
     },
     {
-      accessorKey: "email",
-      header: "LAST NAME",
+      accessorKey: "title",
+      header: "TITLE NAME",
+      cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
+    },
+    {
+      accessorKey: "bodys",
+      header: "BODY NAME",
       cell: (props) => <p className="text-[16px] ml-2">{props.getValue()}</p>
     },
 
@@ -249,27 +273,51 @@ const TanstaskTable = () => {
                           <ModalCloseButton onClick={onClose} className='text-red-500' />
                           <ModalBody pb={6} className="text-white ">
                             <FormControl className='border-solid border-5 border-indigo-600'>
-                              <FormLabel>User name</FormLabel>
-                              <Input name='name' ref={initialRef} value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder='User name' required />
+                              <FormLabel>User ID</FormLabel>
+                              <Input type="text"
+                                className="form-control"
+                                id="userId"
+                                placeholder="Enter user id"
+                                name="userId"
+                                value={userId}
+                                onChange={handleChange} required />
                             </FormControl>
                             <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                              <FormLabel>First name</FormLabel>
+                              <FormLabel>Id Name</FormLabel>
                               <Input
-                                name='username'
-                                value={formData.username}
-                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                placeholder='First name'
+                                type="text"
+                                className="form-control"
+                                id="id"
+                                placeholder="Enter id"
+                                name="id"
+                                value={id}
+                                onChange={handleChange}
                                 required
                               />
                             </FormControl>
                             <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
-                              <FormLabel>Last name</FormLabel>
+                              <FormLabel>Title Name</FormLabel>
                               <Input
-                                name='email'
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                placeholder='Last name'
+                                type="text"
+                                className="form-control"
+                                id="title"
+                                placeholder="Enter title"
+                                name="title"
+                                value={title}
+                                onChange={handleChange}
+                                required
+                              />
+                            </FormControl>
+                            <FormControl className='border-solid border-5 border-indigo-600 mt-3'>
+                              <FormLabel>Body Name</FormLabel>
+                              <Input
+                                className="form-control"
+                                id="body"
+                                rows="3"
+                                placeholder="Enter body"
+                                name="body"
+                                value={body}
+                                onChange={handleChange}
                                 required
                               />
                             </FormControl>
@@ -300,7 +348,7 @@ const TanstaskTable = () => {
           <div className="rounded-lg border-2 border-gray-300 ">
             <div>
               {table.getHeaderGroups().map((headerGroup) => (
-                <div className="grid grid-cols-4 text-[12px] font-bold text-gray-500 " key={headerGroup.id}>
+                <div className="grid grid-cols-5 text-[12px] font-bold text-gray-500 " key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <div className='bg-gray-200 py-4 px-7   font-bold' key={header.id}>
                       {header.column.columnDef.header}
@@ -324,7 +372,7 @@ const TanstaskTable = () => {
               {table.getRowModel().rows.map((row) => (
 
                 <div className={styles.tr} key={row.id}>
-                  <div className="grid grid-cols-4 text-gray-500 text-[12px] font-normal  items-center justify-center ml-5 " key={row.id}>
+                  <div className="grid grid-cols-5 text-gray-500 text-[12px] font-normal  items-center justify-center ml-5 " key={row.id}>
 
                     {row.getVisibleCells().map((cell) => (
 
