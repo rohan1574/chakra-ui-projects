@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
-import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Icon, Input, Stack, useDisclosure } from "@chakra-ui/react";
+import { Alert, AlertIcon, Box, Button, FormControl, FormLabel, Icon, Input, Stack, Textarea, useDisclosure } from "@chakra-ui/react";
 import {
   Modal,
   ModalOverlay,
@@ -15,25 +15,15 @@ import {
 } from '@chakra-ui/react'
 import "../theme/styles";
 import SortIcon from "../icons/SortIcon";
-
-
 import { Outlet } from "react-router-dom";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import styles from '../styles/modules/styles.module.scss';
-
 import { useToast } from '@chakra-ui/react'
 import MyPagination from './MyPagination'
-import Tasktable from './Tasktable';
 import axios from 'axios';
-
-
 const TanstaskTable = () => {
-
-  const [filtering, setfiltering] = useState('');
-  const [defaultv, setDefaultv] = useState({})
   const [data, setData] = useState([])
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [showAlert, setShowAlert] = useState(false);
   const toast = useToast();
   const initialRef = React.useRef(null)
   const finalRef = React.useRef(null)
@@ -42,12 +32,9 @@ const TanstaskTable = () => {
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [globalFilter, setGlobalFilter] = useState('');
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(3);
   const [totalItems, setTotalItems] = useState(data.length);
-  // dgdhgjsdh
-
   const [formData, setFormData] = useState({
     userId: "",
     id: "",
@@ -55,50 +42,75 @@ const TanstaskTable = () => {
     body: "",
   });
   const { userId, id, title, body } = formData;
-  const [refresh, setRefresh] = useState(0)
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (userId && id && title && body) {
-      axios.post('https://jsonplaceholder.typicode.com/posts', formData)
+const [editingItemId, setEditingItemId] = useState(null);
+const handleEdit = (id) => {
+  setEditingItemId(id);
+  const selectedItem = data.find(item => item.id === id);
+  setFormData({
+    userId: selectedItem.userId,
+    id: selectedItem.id,
+    title: selectedItem.title,
+    body: selectedItem.body,
+  });
+  onOpen(); // Open the modal
+};
+// Update handleSubmit to handle both add and edit operations
+const handleSubmit = (e) => {
+  e.preventDefault();
+  if (userId && title && body) {
+    const newItem = { userId, id, title, body };
+    if (editingItemId) {
+      axios.put(`https://jsonplaceholder.typicode.com/posts/${editingItemId}`, newItem)
         .then(res => {
-          // Assuming res.data is the newly created post
-          const newData = [...data, res.data]; // Add the new data to the existing data array
+          const updatedData = data.map(item => item.id === editingItemId ? newItem : item);
+          setData(updatedData);
+          setEditingItemId(null); 
+          setShowSuccessModal(true);
+          onClose();
+        })
+        .catch(err => console.log(err));
+    } else {
+      axios.post('https://jsonplaceholder.typicode.com/posts', newItem)
+        .then(res => {
+          const newData = [...data, res.data];
           setData(newData);
-          setTotalItems(newData.length); // Update totalItems if necessary
+          setTotalItems(newData.length);
           setFormData({ userId: "", id: "", title: "", body: "" });
           setShowSuccessModal(true);
           onClose();
         })
         .catch(err => console.log(err));
     }
-  };
-
-
-  const handleOpenModal = () => {
-    onOpen();
   }
+};
+const handleOpenModal = () => {
+  setFormData({ userId: "", id: "", title: "", body: "" });
+  setEditingItemId(null); 
+  onOpen();
+};
 
-  useEffect(() => {
-    axios.get('https://jsonplaceholder.typicode.com/posts')
-      .then(res => {
-        setData(res.data); // Update the state with the newly fetched data
-        setTotalItems(res.data.length); // Update totalItems if necessary
-      })
-      .catch(err => console.log(err));
-  }, []);
-
-
+useEffect(() => {
+  axios.get('https://jsonplaceholder.typicode.com/posts')
+    .then(res => {
+      setData(res.data); 
+      setTotalItems(res.data.length); 
+    })
+    .catch(err => console.log(err));
+}, [globalFilter, currentPage, pageSize]);
   const handleDelete = (id) => {
-    axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`)
+    setShowDeleteConfirmation(true); 
+    setDeleteItemId(id); 
+  };
+  const confirmDelete = () => {
+    axios.delete(`https://jsonplaceholder.typicode.com/posts/${deleteItemId}`)
       .then(response => {
         // Handle success, e.g., remove the deleted item from state
-        const newData = data.filter(item => item.id !== id);
-        setData(newData);
+        const updatedData = data.filter(item => item.id !== deleteItemId);
+        setData(updatedData);
+        setShowDeleteConfirmation(false); // Close the confirmation modal
         toast({
           title: "Item deleted",
           status: "success",
@@ -118,55 +130,28 @@ const TanstaskTable = () => {
         });
       });
   };
-
-
-
-
-
-
-
+  const cancelDelete = () => {
+    setShowDeleteConfirmation(false); 
+  };
   function useDebounce(value, delay) {
     const [debouncedValue, setDebouncedValue] = useState(value);
-
     useEffect(() => {
       const handler = setTimeout(() => setDebouncedValue(value), delay);
-
       return () => clearTimeout(handler);
     }, [value, delay]);
 
     return debouncedValue;
   }
   const debouncedGlobalFilter = useDebounce(globalFilter, 3000);
-
-
-
-
-
-  // Function to handle saving new user data
-
-
-
-
-
-
-
   const handlePageChange = (page) => {
     console.log("New page:", page);
     setCurrentPage(page);
   };
-
-
   // Calculate start and end indexes for the sliced data
   const startIdx = (currentPage - 1) * pageSize;
   const endIdx = Math.min(startIdx + pageSize, totalItems);
-
   // Slice the data array to get the data for the current page
   const slicedData = data.slice(startIdx, endIdx);
-
-
-
-
-
   const columns = [
     {
       accessorKey: "userId",
@@ -184,19 +169,16 @@ const TanstaskTable = () => {
       cell: (props) => <p className="text-[16px] ml-1"> {props.getValue()}</p>
     },
     {
-      accessorKey: "bodys",
+      accessorKey: "body",
       header: "BODY NAME",
       cell: (props) => <p className="text-[16px] ml-2">{props.getValue()}</p>
     },
-
-
-
     {
       accessorKey: "action",
       header: "ACTION",
       cell: (props) => <p>
         <div className="flex items-center text-gray-400">
-          <Button onClick={onOpen} className="bg-black rounded-full p-1 mr-2">
+          <Button className="bg-black rounded-full p-1 mr-2">
             <p className="text-[12px] text-gray-400 mr-3">
               <Pencil onClick={() => handleEdit(props.row.original.id)} className="w-4 h-4" />
             </p>
@@ -206,12 +188,8 @@ const TanstaskTable = () => {
           </p>
         </div>
       </p>
-
     },
-
   ];
-
-
   const table = useReactTable({
     data: slicedData, // Use slicedData based on current page and page size
     columns,
@@ -223,20 +201,30 @@ const TanstaskTable = () => {
     getPaginationRowModel: getPaginationRowModel(),
     autoResetPageIndex: false,
   });
-
-
   return (
-
-    <div >
-
-
-
-
+  <div >
+      {showDeleteConfirmation && (
+        <Modal isOpen={showDeleteConfirmation} onClose={cancelDelete}>
+          <ModalOverlay />
+          <ModalContent className="bg-blue-500">
+            <ModalHeader className="text-white">Delete Confirmation</ModalHeader>
+            <ModalCloseButton className="text-red-500" />
+            <ModalBody className="text-white">
+              Are you sure you want to delete this item?
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="red" mr={3} onClick={confirmDelete}>
+                Delete
+              </Button>
+              <Button onClick={cancelDelete}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
       <div className="">
         <div className="mb-7 ">
           {/* header text */}
-
-          <div className="flex justify-between  ">
+        <div className="flex justify-between  ">
             <div className=""><Outlet></Outlet></div>
             <div className="flex gap-2 mb-4 -mt-5">
               <div className="mt-3 border flex text-[16px] gap-2 relative ">
@@ -259,8 +247,7 @@ const TanstaskTable = () => {
                     <div onClick={handleOpenModal} className='text-white text-[16px] bg-blue-500 px-4 rounded-lg p-2 items-center mt-3 cursor-pointer'>
                       New User
                     </div>
-
-                    <Modal
+                  <Modal
                       initialFocusRef={initialRef}
                       finalFocusRef={finalRef}
                       isOpen={isOpen}
@@ -339,13 +326,10 @@ const TanstaskTable = () => {
                     </Modal>
                   </div>
                 </div>
-
-
-              </div>
+            </div>
             </div>
           </div>
-
-          <div className="rounded-lg border-2 border-gray-300 ">
+         <div className="rounded-lg border-2 border-gray-300 ">
             <div>
               {table.getHeaderGroups().map((headerGroup) => (
                 <div className="grid grid-cols-5 text-[12px] font-bold text-gray-500 " key={headerGroup.id}>
@@ -365,18 +349,13 @@ const TanstaskTable = () => {
                 </div>
               ))}
             </div>
-
-            {/* middle-text */}
-
-            <div className="">
+          {/* middle-text */}
+       <div className="">
               {table.getRowModel().rows.map((row) => (
-
-                <div className={styles.tr} key={row.id}>
+              <div className={styles.tr} key={row.id}>
                   <div className="grid grid-cols-5 text-gray-500 text-[12px] font-normal  items-center justify-center ml-5 " key={row.id}>
-
                     {row.getVisibleCells().map((cell) => (
-
-                      <div className={styles.td} key={cell.id}>
+                    <div className={styles.td} key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
                     ))}
@@ -384,23 +363,16 @@ const TanstaskTable = () => {
                 </div>
               ))}
             </div>
-
-
-
           </div>
         </div>
         <MyPagination
           currentPage={currentPage}
           totalItems={totalItems}
           pageSize={pageSize}
-
           handlePageChange={handlePageChange}
         />
       </div>
-
     </div>
-
-
   );
 };
 
